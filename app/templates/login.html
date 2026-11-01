@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Acceso{% endblock %}
+{% block content %}
+<div class="card narrow">
+  <h1>Liga Vasca Stats</h1>
+  <p class="muted">Estadísticas avanzadas de baloncesto. Accede con tu usuario.</p>
+  {% if error %}<div class="flash error">{{ error }}</div>{% endif %}
+  <form method="post" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <label>Usuario <input name="username" autocomplete="username" required autofocus></label>
+    <label>Contraseña <input type="password" name="password" autocomplete="current-password" required></label>
+    <button class="btn">Entrar</button>
+  </form>
+</div>
+{% endblock %}

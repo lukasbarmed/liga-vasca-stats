@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Usuarios{% endblock %}
+{% block content %}
+<h1>Gestión de usuarios</h1>
+<div class="card">
+  <h2>Crear usuario</h2>
+  <form method="post" class="inline">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <label>Usuario <input name="username" required minlength="3" maxlength="32" autocomplete="off"></label>
+    <label>Contraseña <input type="password" name="password" required minlength="8" autocomplete="new-password"></label>
+    <label>Rol <select name="role">{% for r in roles %}<option value="{{ r }}">{{ r }}</option>{% endfor %}</select></label>
+    <button class="btn">Crear</button>
+  </form>
+</div>
+<h2>Usuarios existentes</h2>
+<table class="data"><thead><tr><th class="left">Usuario</th><th class="left">Rol</th><th class="left">Creado</th></tr></thead>
+<tbody>{% for u in users %}<tr><td class="left">{{ u.username }}</td><td class="left">{{ u.role }}</td><td class="left">{{ u.created_at }}</td></tr>{% endfor %}</tbody></table>
+{% endblock %}

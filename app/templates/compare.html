@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Comparar equipos{% endblock %}
+{% block content %}
+<div class="head"><h1>Comparar dos equipos</h1>
+  {% set extra = 'a=%d&b=%d&'|format(a, b) %}{% include "_modebar.html" %}
+</div>
+<form method="get" class="card inline">
+  <input type="hidden" name="mode" value="{{ 'pg' if per_game else 'tot' }}">
+  <label>Equipo A <select name="a">{% for t in all_teams %}<option value="{{ t.id }}" {{ 'selected' if t.id == a }}>{{ t.name }}</option>{% endfor %}</select></label>
+  <label>Equipo B <select name="b">{% for t in all_teams %}<option value="{{ t.id }}" {{ 'selected' if t.id == b }}>{{ t.name }}</option>{% endfor %}</select></label>
+  <button class="btn">Comparar</button>
+</form>
+{% if ra and rb %}
+<div class="scroll">
+<table class="data cmp">
+  <thead><tr><th class="right">{{ ra.name }} <span class="muted small">({{ ra.games }} PJ)</span></th><th>Métrica</th><th class="left">{{ rb.name }} <span class="muted small">({{ rb.games }} PJ)</span></th></tr></thead>
+  <tbody>
+  {% set ns = namespace(group='') %}
+  {% for l in lines %}
+    {% if l.m.group != ns.group %}{% set ns.group = l.m.group %}
+      <tr class="sep"><td colspan="3">{{ {'basic':'Estadísticas básicas','advanced':'Estadísticas avanzadas','custom':'Métricas personalizadas'}[l.m.group] }}</td></tr>
+    {% endif %}
+    <tr>
+      <td class="right"><div class="bar right"><i class="{{ 'win' if l.win == 'a' }}" style="width:{{ l.wa }}%"></i></div>
+        <span class="val {{ 'win' if l.win == 'a' }}">{{ l.va|fmt(l.m.dec) }}</span>{% if l.ka %} <span class="rank">#{{ l.ka }}</span>{% endif %}</td>
+      <td class="mid" title="{{ l.m.desc or l.m.formula }}">{{ l.m.label }}</td>
+      <td class="left"><div class="bar"><i class="{{ 'win' if l.win == 'b' }}" style="width:{{ l.wb }}%"></i></div>
+        <span class="val {{ 'win' if l.win == 'b' }}">{{ l.vb|fmt(l.m.dec) }}</span>{% if l.kb %} <span class="rank">#{{ l.kb }}</span>{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="muted small">En verde, el equipo con mejor valor (según el sentido de cada métrica). «#n» es la posición en la liga.</p>
+{% elif all_teams %}<p class="muted">Elige dos equipos para compararlos.</p>
+{% else %}<div class="card">Aún no hay datos cargados.</div>{% endif %}
+{% endblock %}

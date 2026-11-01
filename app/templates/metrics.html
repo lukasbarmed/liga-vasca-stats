@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Métricas avanzadas{% endblock %}
+{% block content %}
+<h1>Métricas avanzadas personalizadas</h1>
+<p class="muted">Define nuevas estadísticas a partir de las básicas. Aparecerán en la tabla de la liga, en cada equipo y en la comparativa.</p>
+<div class="card">
+  <h2>Nueva métrica</h2>
+  <form method="post" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <div class="inline">
+      <label>Clave <input name="key" required pattern="[A-Za-z_][A-Za-z0-9_]*" placeholder="ej. pts_por_pos" autocomplete="off"></label>
+      <label>Nombre <input name="label" required placeholder="ej. Puntos por posesión" autocomplete="off"></label>
+      <label>Decimales <input type="number" name="decimals" value="2" min="0" max="4" style="width:4.5rem"></label>
+      <label>Mejor valor <select name="hb"><option value="">Neutral</option><option value="1">Más alto</option><option value="0">Más bajo</option></select></label>
+    </div>
+    <label>Fórmula <input name="formula" required placeholder="ej. pts/poss" autocomplete="off" style="width:100%"></label>
+    <button class="btn">Añadir métrica</button>
+  </form>
+  <p class="small muted">Operadores: <code>+ - * /</code>, paréntesis y <code>min() max() abs()</code>. Las variables son <strong>totales acumulados</strong> de la temporada; usa <code>games</code> para dividir por partidos.
+  El prefijo <code>opp_</code> indica el rival (lo permitido). Variables:</p>
+  <p class="small"><code>{{ variables|join('  ') }}</code></p>
+  <p class="small muted">Ejemplos: <code>100*(fg3m*3)/pts</code> (peso del T3 en el anotado) · <code>(ast+stl)/tov</code> · <code>pts/games - opp_pts/games</code>.</p>
+</div>
+<h2>Métricas personalizadas</h2>
+<table class="data"><thead><tr><th class="left">Nombre</th><th class="left">Clave</th><th class="left">Fórmula</th><th></th></tr></thead>
+<tbody>
+{% for m in custom %}
+  <tr><td class="left">{{ m.label }}</td><td class="left"><code>{{ m.key }}</code></td><td class="left"><code>{{ m.formula }}</code></td>
+  <td><form method="post"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ m.id }}"><button class="link danger">Eliminar</button></form></td></tr>
+{% else %}<tr><td colspan="4" class="muted left">Aún no hay métricas personalizadas</td></tr>{% endfor %}
+</tbody></table>
+<h2>Métricas integradas (fórmulas)</h2>
+<table class="data"><thead><tr><th class="left">Nombre</th><th class="left">Fórmula</th></tr></thead>
+<tbody>{% for m in builtin if m.group == 'advanced' %}<tr><td class="left">{{ m.label }}</td><td class="left"><code>{{ m.formula }}</code></td></tr>{% endfor %}</tbody></table>
+{% endblock %}

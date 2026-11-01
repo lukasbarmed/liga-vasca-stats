@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Liga{% endblock %}
+{% block content %}
+<div class="head"><h1>Comparativa general de la liga</h1>
+  {% set extra = '' %}{% include "_modebar.html" %}
+</div>
+{% if not rows %}
+  <div class="card">Todavía no hay partidos cargados. Pulsa <strong>Actualizar estadísticas</strong> para descargarlos.</div>
+{% else %}
+<div class="tabs" data-tabs="league-table">
+  <button data-g="basic" class="on">Básicas</button>
+  <button data-g="advanced">Avanzadas</button>
+  {% if defs|selectattr('group','equalto','custom')|list %}<button data-g="custom">Personalizadas</button>{% endif %}
+  <button data-g="all">Todas</button>
+</div>
+<div class="scroll">
+<table id="league-table" class="data sortable" data-show="basic">
+  <thead><tr>
+    <th class="left sticky">Equipo</th><th title="Partidos jugados">PJ</th>
+    {% for m in defs %}<th class="g-{{ m.group }}" title="{{ m.desc or m.formula }}">{{ m.label }}</th>{% endfor %}
+  </tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr><td class="left sticky" data-v="{{ r.name }}"><a href="{{ url_for('team', team_id=r.team_id) }}">{{ r.name }}</a></td>
+      <td data-v="{{ r.games }}">{{ r.games }}</td>
+      {% for m in defs %}{% set v = r['values'][m.key] %}
+        <td class="g-{{ m.group }}" data-v="{{ '' if v is none else v }}">{{ v|fmt(m.dec) }}</td>{% endfor %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="muted small">Haz clic en una cabecera para ordenar. Pasa el ratón por encima para ver la definición. Las posesiones se estiman como TC intentados + 0,44·TL − RO + pérdidas.</p>
+{% endif %}
+{% endblock %}

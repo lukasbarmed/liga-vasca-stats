@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}{{ team.name }}{% endblock %}
+{% block content %}
+{% set w = namespace(n=0) %}{% for g in games %}{% if g.pts > g.opp_pts %}{% set w.n = w.n + 1 %}{% endif %}{% endfor %}
+<div class="head"><div><h1>{{ team.name }}</h1>
+  <span class="muted">{{ games|length }} partidos · {{ w.n }} victorias · {{ games|length - w.n }} derrotas</span></div>
+  {% set extra = '' %}{% include "_modebar.html" %}
+</div>
+{% if not mine %}
+  <div class="card">Este equipo aún no tiene partidos cargados.</div>
+{% else %}
+<div class="tiles">
+  {% for k in ['ortg','drtg','net','pace','efg','tov_pct'] %}
+    {% for m in defs if m.key == k %}
+      <div class="tile"><div class="muted small">{{ m.label }}</div>
+        <div class="big">{{ mine['values'][k]|fmt(m.dec) }}</div>
+        <div class="small muted">{% if mine.ranks.get(k) %}#{{ mine.ranks[k] }} de {{ n_teams }}{% else %}&nbsp;{% endif %}</div></div>
+    {% endfor %}
+  {% endfor %}
+</div>
+
+<h2>Estadísticas del equipo</h2>
+<div class="scroll">
+<table class="data">
+  <thead><tr><th class="left">Métrica</th><th>Valor</th><th>Media liga</th><th>Posición</th></tr></thead>
+  <tbody>
+  {% set ns = namespace(group='') %}
+  {% for m in defs %}
+    {% if m.group != ns.group %}{% set ns.group = m.group %}
+      <tr class="sep"><td colspan="4">{{ {'basic':'Básicas','advanced':'Avanzadas','custom':'Personalizadas'}[m.group] }}</td></tr>
+    {% endif %}
+    <tr><td class="left" title="{{ m.desc or m.formula }}">{{ m.label }}</td>
+      <td><strong>{{ mine['values'][m.key]|fmt(m.dec) }}</strong></td>
+      <td class="muted">{{ avg[m.key]|fmt(m.dec) }}</td>
+      <td>{% if mine.ranks.get(m.key) %}#{{ mine.ranks[m.key] }}{% else %}–{% endif %}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<h2>Jugadores</h2>
+<div class="scroll">
+<table class="data sortable">
+  <thead><tr><th class="left">Jugador</th><th>PJ</th><th>Min</th><th>PTS</th><th>REB</th><th>AST</th><th>ROB</th><th>TAP</th><th>PER</th>
+    <th>FP</th><th>FR</th><th>%TC</th><th>%T2</th><th>%T3</th><th>%TL</th><th title="Tiro efectivo">eFG%</th><th title="Tiro real">TS%</th>
+    <th title="Porcentaje de uso">USG%</th><th title="Asistencias/pérdidas">AST/PER</th><th title="Más/menos por partido">+/-</th><th title="Puntos por 36 min">PTS/36</th><th>Val</th></tr></thead>
+  <tbody>
+  {% for p in players %}
+    <tr><td class="left" data-v="{{ p.name }}">{{ p.name|title }} <span class="muted small">#{{ p.dorsal }}</span></td>
+    {% for k,d in [('games',0),('min',1),('pts',1),('reb',1),('ast',1),('stl',1),('blk',1),('tov',1),('pf',1),('pf_rec',1),('fg_pct',1),('fg2_pct',1),('fg3_pct',1),('ft_pct',1),('efg',1),('ts',1),('usg',1),('ast_tov',2),('pm',1),('pts36',1),('val',1)] %}
+      <td data-v="{{ '' if p[k] is none else p[k] }}">{{ p[k]|fmt(d) }}</td>
+    {% endfor %}</tr>
+  {% else %}<tr><td colspan="22" class="muted">Sin datos de jugadores</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<h2 id="combos">Combinaciones en pista</h2>
+<form method="get" action="#combos" class="card inline">
+  <input type="hidden" name="mode" value="{{ 'pg' if per_game else 'tot' }}">
+  <label>Tipo <select name="k">
+    {% for n, l in [(2,'Parejas'),(3,'Tríos'),(4,'Cuartetos'),(5,'Quintetos')] %}<option value="{{ n }}" {{ 'selected' if n == size }}>{{ l }}</option>{% endfor %}
+  </select></label>
+  <label>Minutos mínimos juntos <input type="number" name="min" min="0" step="1" value="{{ min_minutes|int }}" style="width:5rem"></label>
+  <button class="btn">Aplicar</button>
+</form>
+<div class="scroll">
+<table class="data sortable">
+  <thead><tr><th class="left">Jugadores</th><th>Min</th><th>PJ</th><th>PTS</th><th>PR</th><th>+/-</th><th title="Diferencia por 40 min">+/- 40'</th>
+    <th>Pos.</th><th>ORtg</th><th>DRtg</th><th>Neto</th><th>eFG%</th><th>eFG% perm.</th><th>%Pérd.</th><th>%Pérd. forz.</th><th>%RO</th><th>%RD</th><th>Uso T3</th><th>Ratio TL</th></tr></thead>
+  <tbody>
+  {% for c in combos %}
+    <tr><td class="left" data-v="{{ c.players|join(' ') }}">{% for n in c.players %}{{ n.split(' ')[0]|title }} {{ (n.split(' ')[1:2]|first or '')|title }}{{ ' · ' if not loop.last }}{% endfor %}</td>
+    {% for k,d in [('minutes',1),('games',0),('pts',0),('opp_pts',0),('net',0),('net40',1),('poss',1),('ortg',1),('drtg',1),('net_rtg',1),('efg',1),('opp_efg',1),('tov_pct',1),('opp_tov_pct',1),('orb_pct',1),('drb_pct',1),('fg3_rate',1),('ftr',1)] %}
+      <td data-v="{{ '' if c[k] is none else c[k] }}">{{ c[k]|fmt(d) }}</td>
+    {% endfor %}</tr>
+  {% else %}<tr><td colspan="19" class="muted">No hay combinaciones con esos minutos. Baja el mínimo.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="muted small">Datos reconstruidos del jugada a jugada (entradas/salidas de pista). Se muestran las 200 combinaciones con más minutos.</p>
+
+<h2>Partidos</h2>
+<div class="scroll">
+<table class="data">
+  <thead><tr><th class="left">Jornada</th><th class="left">Fecha</th><th class="left">Rival</th><th>Resultado</th><th>ORtg</th><th>DRtg</th><th>eFG%</th><th>Pos.</th></tr></thead>
+  <tbody>
+  {% for g in games|reverse %}
+    <tr><td class="left">{{ g.matchday or '–' }}</td><td class="left">{{ (g.played_at or '')[:10] }}</td>
+      <td class="left">{{ '' if g.home else '@ ' }}{{ g.opp }}</td>
+      <td><span class="pill {{ 'w' if g.pts > g.opp_pts else 'l' }}">{{ g.pts }}-{{ g.opp_pts }}</span></td>
+      <td>{{ g.ortg|fmt(1) }}</td><td>{{ g.drtg|fmt(1) }}</td><td>{{ g.efg|fmt(1) }}</td><td>{{ g.poss|fmt(1) }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

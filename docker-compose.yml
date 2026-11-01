@@ -1,0 +1,16 @@
+# VPS propio: HTTPS automático con Caddy. Cambia TU_DOMINIO en Caddyfile.
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes: ["appdata:/data"]
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    volumes: ["./Caddyfile:/etc/caddy/Caddyfile:ro", "caddy_data:/data"]
+    depends_on: [web]
+volumes:
+  appdata:
+  caddy_data:

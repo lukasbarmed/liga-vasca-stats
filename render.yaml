@@ -1,0 +1,16 @@
+# Render (Blueprint). El disco persistente requiere un plan de pago.
+services:
+  - type: web
+    name: liga-vasca-stats
+    runtime: docker
+    plan: starter
+    healthCheckPath: /health
+    disk: {name: data, mountPath: /data, sizeGB: 1}
+    envVars:
+      - {key: DATABASE_PATH, value: /data/app.db}
+      - {key: COOKIE_SECURE, value: "1"}
+      - {key: SECRET_KEY, generateValue: true}
+      - {key: ADMIN_USER, value: admin}
+      - {key: ADMIN_PASSWORD, sync: false}
+      - {key: MATCHDAY_URL, sync: false}
+      - {key: GROUP_ID, value: "2879"}
